@@ -4,7 +4,6 @@
 
 with Ada.Numerics.Elementary_Functions;
 
-with SDL.Audio.Buffers;
 with SDL.Audio.Frames;
 
 package body Play_Callbacks is
@@ -17,9 +16,8 @@ package body Play_Callbacks is
                                             Frame_Config => SDL.Audio.Frames.Config_Stereo);
    N : Integer := 0;
 
-   procedure Player (Userdata  : in User_Type;
-                     Audio_Buf : in Buffer_Base;
-                     Audio_Len : in Byte_Count)
+   procedure Player (Userdata  : in out User_Data;
+                     Audio_Buf : in     Buffer_Type)
    is
       pragma Unreferenced (Userdata);
       use SDL.Audio.Frames;
@@ -33,11 +31,9 @@ package body Play_Callbacks is
       N_Float : Float;
       Phase_L : Float;
       Phase_R : Float;
-      Buffer  : Buffer_Type := Buffers.To_Buffer (Audio_Buf, Audio_Len);
       Frame   : Samples.Frame_Type;
    begin
---      Lock;
-      for Index in First_Index (Buffer) .. Samples.Last_Index (Buffer) loop
+      for Index in First_Index (Audio_Buf) .. Samples.Last_Index (Audio_Buf) loop
          N_Float := Float (N);
          Phase_L := 5.0 * Sin (2.0 * Pi * W_Phase * N_Float);
          Phase_R := 5.0 * Cos (2.0 * Pi * W_Phase * N_Float);
@@ -46,10 +42,9 @@ package body Play_Callbacks is
                                                       Cycle => 2.0 * Pi)),
             Front_Right => Sample_Type (3000.0 * Sin (2.0 * Pi * W_Right * N_Float + Phase_R,
                                                       Cycle => 2.0 * Pi)));
-         Update (Buffer, Index, Value => Frame);
+         Update (Audio_Buf, Index, Value => Frame);
          N := N + 1;
       end loop;
---      Unlock;
    end Player;
 
 end Play_Callbacks;

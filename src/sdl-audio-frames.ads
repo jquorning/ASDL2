@@ -57,6 +57,7 @@ package SDL.Audio.Frames is
 
       function First_Index (Buffer : Buffer_Type) return Frame_Index;
       function Last_Index  (Buffer : Buffer_Type) return Frame_Index;
+      --  TODO: function Length (Buffer : Buffer_Type) return Frame_Index;
 
       function Value (Buffer  : in Buffer_Type;
                       Frame   : in Frame_Index;
@@ -67,14 +68,18 @@ package SDL.Audio.Frames is
                       Frame  : in Frame_Index)
                      return Frame_Type;
 
-      procedure Update (Buffer  : in out Buffer_Type;
-                        Frame   : in     Frame_Index;
-                        Channel : in     Frame_Config;
-                        Value   : in     Sample_Type);
+      --  Please not that conceptually the buffer changes, but due to the fact
+      --  that behind the scenes these are raw pointers to the data, we can
+      --  get away with using "in" parameter mode. The added value is that
+      --  a buffer's contents can be changed directly via a To_Buffer call.
+      procedure Update (Buffer  : in Buffer_Type;
+                        Frame   : in Frame_Index;
+                        Channel : in Frame_Config;
+                        Value   : in Sample_Type);
 
-      procedure Update (Buffer  : in out Buffer_Type;
-                        Frame   : in     Frame_Index;
-                        Value   : in     Frame_Type);
+      procedure Update (Buffer  : in Buffer_Type;
+                        Frame   : in Frame_Index;
+                        Value   : in Frame_Type);
    end Buffer_Overlays;
 
 end SDL.Audio.Frames;

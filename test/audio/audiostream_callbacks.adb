@@ -2,12 +2,11 @@
 --
 --
 
-with SDL.Audio.Buffers;
 with SDL.Audio.Frames;
 
 package body Audiostream_Callbacks is
 
-   procedure Clear (Buffer : in out Buffer_Type);
+   procedure Clear (Buffer : in Buffer_Type);
    --  Clear Buffer.
 
    type Sample_Type is range -2**15 .. 2**15 - 1;
@@ -16,7 +15,7 @@ package body Audiostream_Callbacks is
       new SDL.Audio.Frames.Buffer_Overlays (Sample_Type  => Sample_Type,
                                             Frame_Config => Frames.Config_Stereo);
 
-   procedure Clear (Buffer : in out Buffer_Type) is
+   procedure Clear (Buffer : in Buffer_Type) is
       use Stereo_Buffers;
       subtype Frame_Range is Frame_Index
         range First_Index (Buffer) .. Last_Index (Buffer);
@@ -26,17 +25,14 @@ package body Audiostream_Callbacks is
       end loop;
    end Clear;
 
-   procedure Callback (Userdata  : in User_Type;
-                       Audio_Buf : in Buffer_Base;
-                       Audio_Len : in Byte_Count)
+   procedure Callback (Userdata  : in out User_Data;
+                       Audio_Buf : in     Buffer_Type)
    is
-      Buffer : Buffer_Type := Buffers.To_Buffer (Audio_Buf,
-                                                 Audio_Len);
       Got : Byte_Count;
       pragma Unreferenced (Userdata, Got);
    begin
-      Clear (Buffer);
-      Streams.Stream_Get (Stream, Buffer, Got);
+      Clear (Audio_Buf);
+      Streams.Stream_Get (Stream, Audio_Buf, Got);
    end Callback;
 
 end Audiostream_Callbacks;

@@ -12,7 +12,11 @@ project Tests is
                         "load_surface.adb",
 
                         --  For SDL.TTF.
-                        "ttf.adb");
+                        "ttf.adb",
+
+			--  For SDL.Audio
+			"audio.adb"
+			);
 
    package Compiler renames SDLAda.Compiler;
 end Tests;

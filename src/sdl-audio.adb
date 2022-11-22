@@ -49,14 +49,22 @@ package body SDL.Audio is
 
    procedure Initialize (Driver : in String) is
       use Interfaces.C.Strings;
+
       function SDL_Audio_Init (Driver_Name : in chars_ptr)
                               return C.int with
         Import        => True,
         Convention    => C,
         External_Name => "SDL_AudioInit";
 
-      Result : constant C.int := SDL_Audio_Init (New_String (Driver));
+      --  We assume that we will not be called with an empty string
+      --  here, so no special handling required. Also, I am not certain
+      --  if SDL_Audio_Init is supposed to handle NULL pointers.
+      C_Driver_Name : chars_ptr := New_String (Driver);
+
+      Result : constant C.int := SDL_Audio_Init (C_Driver_Name);
    begin
+      Free (C_Driver_Name); --  deallocate the C string
+
       if Result = 0 then
          raise Audio_Error with SDL.Error.Get;
       end if;
@@ -98,6 +106,24 @@ package body SDL.Audio is
       end if;
    end Open;
 
+   procedure Open (Required : in out Audio_Spec)
+   is
+      function SDL_Open_Audio (Desired  : in     Audio_Spec;
+                               Obtained : access Audio_Spec)
+                              return C.int with
+        Import        => True,
+        Convention    => C,
+        External_Name => "SDL_OpenAudio";
+      --  Alternative interface. If "Obtained" is NULL, Desired will only be
+      --  updated with the respective size and silence values.
+      Result : constant C.int := SDL_Open_Audio (Desired  => Required,
+                                                 Obtained => null);
+   begin
+      if Result /= SDL.Success then
+         raise Audio_Error with SDL.Error.Get;
+      end if;
+   end Open;
+
    function Get_Number_Of_Devices (Is_Capture : in Boolean) return Natural
    is
       function SDL_Get_Number_Of_Devices (Capture : in C.int)
@@ -130,7 +156,7 @@ package body SDL.Audio is
                    Is_Capture      : in     Boolean;
                    Desired         : in     Audio_Spec;
                    Obtained        :    out Audio_Spec;
-                   Allowed_Changes : in     Integer)
+                   Allowed_Changes : in     Allowed_Changes_Flags)
    is
       use Interfaces.C.Strings;
       function SDL_Open_Audio_Device
@@ -138,19 +164,30 @@ package body SDL.Audio is
          Is_Capture      : in     C.int;
          Desired         : in     Audio_Spec;
          Obtained        :    out Audio_Spec;
-         Allowed_Changes : in     C.int)
+         Allowed_Changes : in     Allowed_Changes_Flags)
         return C.int with
         Import        => True,
         Convention    => C,
         External_Name => "SDL_OpenAudioDevice";
 
+      --  In Ada we can't easily distinguish between an empty string
+      --  and a null pointer. For the sake of simplicity we assume that
+      --  an empty string never denotes a valid device name and should
+      --  be used as the place-holder for "use whatever device you think
+      --  is fine", which in C translates to NULL.
+      C_Device_Name : chars_ptr := (if Device_Name = ""
+                                    then Null_Ptr
+                                    else New_String (Device_Name));
+
       Result : constant C.int := SDL_Open_Audio_Device
-        (Device_Name    => New_String (Device_Name),
+        (Device_Name     => C_Device_Name,
          Is_Capture      => (if Is_Capture then 1 else 0),
          Desired         => Desired,
          Obtained        => Obtained,
-         Allowed_Changes => C.int (Allowed_Changes));
+         Allowed_Changes => Allowed_Changes);
    begin
+      Free (C_Device_Name); --  deallocate the C string
+
       if Result <= 0 then
          raise Audio_Error with SDL.Error.Get;
       end if;

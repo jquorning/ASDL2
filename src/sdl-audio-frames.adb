@@ -47,10 +47,10 @@ package body SDL.Audio.Frames is
          return Buf (Frame);
       end Value;
 
-      procedure Update (Buffer  : in out Buffer_Type;
-                        Frame   : in     Frame_Index;
-                        Channel : in     Frame_Config;
-                        Value   : in     Sample_Type)
+      procedure Update (Buffer  : in Buffer_Type;
+                        Frame   : in Frame_Index;
+                        Channel : in Frame_Config;
+                        Value   : in Sample_Type)
       is
          subtype Array_Range is Frame_Index
            range First_Index (Buffer) .. Last_Index  (Buffer);
@@ -60,9 +60,9 @@ package body SDL.Audio.Frames is
          Buf (Frame) (Channel) := Value;
       end Update;
 
-      procedure Update (Buffer  : in out Buffer_Type;
-                        Frame   : in     Frame_Index;
-                        Value   : in     Frame_Type)
+      procedure Update (Buffer  : in Buffer_Type;
+                        Frame   : in Frame_Index;
+                        Value   : in Frame_Type)
       is
          subtype Array_Range is Frame_Index
            range First_Index (Buffer) ..  Last_Index  (Buffer);

@@ -87,15 +87,52 @@ package SDL.Audio is
    Audio_S32_Sys : constant Audio_Format := (Bits => 32, Signed =>  True, Big_Endian => Sys_Is_Big_Endian,
                                              others => False);
 
+   ---------------------------------
+   --  SDL_AUDIO_ALLOW_... flags  --
+   ---------------------------------
+   --  Map the C int for allowed changes onto a proper (record) type.
+   type Allowed_Changes_Flags is
+      record
+         Allow_Frequency_Change : Boolean;
+         Allow_Format_Change    : Boolean;
+         Allow_Channels_Change  : Boolean;
+         Allow_Samples_Change   : Boolean;
+      end record
+     with
+       Bit_Order => System.Low_Order_First, --  force LE bit counts
+       Size      => Interfaces.C.int'Size;
+   --  The explicit bit order should be safe also on Big Endian machines,
+   --  albeit on those the compiler may give some diagnostics.
+   for Allowed_Changes_Flags use
+      record
+         Allow_Frequency_Change at 0 range 0 .. 0; -- 16#0000_0001#
+         Allow_Format_Change    at 0 range 1 .. 1; -- 16#0000_0002#
+         Allow_Channels_Change  at 0 range 2 .. 2; -- 16#0000_0004#
+         Allow_Samples_Change   at 0 range 3 .. 3; -- 16#0000_0008#
+      end record;
+
+   Allow_No_Change  : constant Allowed_Changes_Flags :=
+     Allowed_Changes_Flags'(others => False);
+   Allow_Any_Change : constant Allowed_Changes_Flags :=
+     Allowed_Changes_Flags'(others => True);
+
    type Byte_Count  is new Unsigned_32;
    type Buffer_Base is new System.Address;
-   type User_Type   is new Unsigned_64;
 
-   type Callback_Access is
-     access procedure  (Userdata  : in User_Type;
-                        Audio_Buf : in Buffer_Base;
-                        Audio_Len : in Byte_Count)
-     with Convention => C;
+   --  Define a convenience constant for when we don't pass userdata through the
+   --  callbacks.
+   No_User_Data : constant System.Address := System.Null_Address;
+
+   package Internal is
+      --  This callback should never be directly used by the user of the
+      --  library.  Instead, an instance of SDL.Audio.Callbacks should be
+      --  created.
+      type Callback_Access is
+        access procedure  (Userdata  : in System.Address;
+                           Audio_Buf : in Buffer_Base;
+                           Audio_Len : in Interfaces.C.int)
+        with Convention => C;
+   end Internal;
 
    type Sample_Rate   is new Integer_32;
    type Channel_Count is new Unsigned_8;
@@ -109,10 +146,11 @@ package SDL.Audio is
          Samples   : Unsigned_16;     -- 2
          Padding   : Unsigned_16;     -- 2
          Size      : Unsigned_32;     -- 4
-         Callback  : Callback_Access; -- 8
-         Userdata  : User_Type;       -- 8
+         Callback  : Internal.Callback_Access; -- 8
+         Userdata  : System.Address;  -- 8
       end record
-        with Size => 8 * 32;
+     with Convention => C;
+   --  Size => 8 * 32; --  This is correct only for 64 bit machines.
 
    type Buffer_Type is private;
    Null_Buffer : constant Buffer_Type;
@@ -133,6 +171,11 @@ package SDL.Audio is
 
    procedure Open (Desired  : in     Audio_Spec;
                    Obtained :    out Audio_Spec);
+   pragma Obsolescent (Entity  => Open,
+                       Message => "Consider using Open (Device => ...) instead.");
+   procedure Open (Required : in out Audio_Spec);
+   pragma Obsolescent (Entity  => Open,
+                       Message => "Consider using Open (Device => ...) instead.");
 
    function Get_Number_Of_Devices (Is_Capture : in Boolean) return Natural;
    function Get_Device_Name (Index      : in Positive;
@@ -143,14 +186,18 @@ package SDL.Audio is
                    Is_Capture      : in     Boolean;
                    Desired         : in     Audio_Spec;
                    Obtained        :    out Audio_Spec;
-                   Allowed_Changes : in     Integer);
+                   Allowed_Changes : in     Allowed_Changes_Flags);
 
    type Status_Type is (Stopped, Playing, Paused);
    function Status return Status_Type;
+   pragma Obsolescent (Entity  => Status,
+                       Message => "Consider using Status (Device => ...) instead.");
    function Status (Device : in Device_Id)
                    return Status_Type;
 
    procedure Pause (Pause_On : in Boolean);
+   pragma Obsolescent (Entity  => Pause,
+                       Message => "Consider using Pause (Device => ...) instead.");
    procedure Pause (Device   : in Device_Id;
                     Pause_On : in Boolean);
 
@@ -176,6 +223,8 @@ package SDL.Audio is
    procedure Mix (Target : in Buffer_Type;
                   Source : in Buffer_Type;
                   Volume : in Audio_Volume);
+   pragma Obsolescent (Entity  => Mix,
+                       Message => "Consider using Mix_Format (...) instead.");
 
    procedure Mix_Format (Target : in Buffer_Type;
                          Source : in Buffer_Type;
@@ -203,9 +252,13 @@ package SDL.Audio is
    ---------------
 
    procedure Lock;
+   pragma Obsolescent (Entity  => Lock,
+                       Message => "Consider using Lock (Device => ...) instead.");
    procedure Lock (Device : in Device_Id);
 
    procedure Unlock;
+   pragma Obsolescent (Entity  => Unlock,
+                       Message => "Consider using Unlock (Device => ...) instead.");
    procedure Unlock (Device : in Device_Id);
 
    ---------------
@@ -213,6 +266,8 @@ package SDL.Audio is
    ---------------
 
    procedure Close;
+   pragma Obsolescent (Entity  => Close,
+                       Message => "Consider using Close (Device => ...) instead.");
    procedure Close (Device : in Device_Id);
 
 private

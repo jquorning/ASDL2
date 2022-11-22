@@ -20,7 +20,7 @@ procedure Capture is
       Silence   => 0,
       Size      => 0,
       Callback  => null,
-      Userdata  => 0,
+      Userdata  => SDL.Audio.No_User_Data,
       Padding   => 0);
 
    Device_Capture    : Device_Id;
@@ -43,9 +43,9 @@ begin
       Name_Playback : constant String := Get_Device_Name (Is_Capture => False, Index => 1);
    begin
       Open (Device_Playback, Name_Playback,
-            False, Desired, Obtained_Playback, 0);
+            False, Desired, Obtained_Playback, Allow_No_Change);
       Open (Device_Capture,  Name_Capture,
-            True,  Desired, Obtained_Capture,  0);
+            True,  Desired, Obtained_Capture,  Allow_No_Change);
 
       Put_Line ("Obtained playback:");
       Put_Line ("Device name   : " & Name_Playback);

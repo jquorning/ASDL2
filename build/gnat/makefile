@@ -23,6 +23,15 @@ TESTS_SRCS	=	$(SRC_DIR)/test/clipboard.adb \
 			$(SRC_DIR)/test/maths/maths.ad[sb] \
 			$(SRC_DIR)/test/maths/maths.c
 
+AUDIO_SRCS	=	$(SRC_DIR)/test/audio/audio_io.ad[bs] \
+			$(SRC_DIR)/test/audio/audiostream.adb \
+			$(SRC_DIR)/test/audio/audiostream_callbacks.ad[bs] \
+			$(SRC_DIR)/test/audio/capture.adb \
+			$(SRC_DIR)/test/audio/inspection.adb \
+			$(SRC_DIR)/test/audio/play_callbacks.ad[bs] \
+			$(SRC_DIR)/test/audio/play_cb.adb \
+			$(SRC_DIR)/test/audio/play_wav.adb
+
 GEN_KB		=	gen/src/sdl-events-keyboards.ads
 
 ifeq (,$(filter $(SDL_PLATFORM), "linux" "windows" "bsd" "android"))
@@ -34,9 +43,9 @@ endif
 # With GNAT, all static libs end with .a
 LIB_NAME	=	lib/libadasdl.a
 
-.PHONY: sdlada.gpr test_maths_build.gpr test.gpr tools.gpr
+.PHONY: sdlada.gpr test_maths_build.gpr test.gpr tests_audio.gpr tools.gpr
 
-all: tools $(LIB_NAME) tests
+all: tools $(LIB_NAME) tests tests_audio
 
 # TODO: Fix the compiler so we actually get shared libs!
 #
@@ -79,13 +88,17 @@ clean-tools:
 #####################################################################################
 # Tests
 
-tests: $(LIB_NAME) tests.gpr $(TESTS_SRCS)
+tests: $(LIB_NAME) tests.gpr $(TESTS_SRCS) tests_audio.gpr $(AUDIO_SRCS)
 
-.PHONY: $(TESTS_SRCS)
+.PHONY: $(TESTS_SRCS) $(AUDIO_SRCS)
 
 tests.gpr: $(TESTS_SRCS) gen/$(SDL_MODE)/test/libtestmaths.so
 	$(GPRMAKE) -p -gnat2012 -XSDL_MODE=$(SDL_MODE) -XSDL_PLATFORM=$(SDL_PLATFORM) \
 		-Ptests.gpr ${SDL2_CONFIG}
+
+tests_audio.gpr: $(AUDIO_SRCS)
+	$(GPRMAKE) -p -gnat2012 -XSDL_MODE=$(SDL_MODE) -XSDL_PLATFORM=$(SDL_PLATFORM) \
+		-P tests_audio.gpr ${SDL2_CONFIG}
 
 # Maths library
 
@@ -98,6 +111,7 @@ gen/$(SDL_MODE)/test/libtestmaths.so: $(SRC_DIR)/test/maths/maths.ad[sb] $(SRC_D
 clean-tests:
 	$(GPRCLEAN) -XSDL_MODE=$(SDL_MODE) -XSDL_PLATFORM=$(SDL_PLATFORM) -Ptests.gpr
 	$(GPRCLEAN) -XSDL_MODE=$(SDL_MODE) -XSDL_PLATFORM=$(SDL_PLATFORM) -Ptest_maths_build.gpr
+	$(GPRCLEAN) -XSDL_MODE=$(SDL_MODE) -XSDL_PLATFORM=$(SDL_PLATFORM) -Ptests_audio.gpr
 
 #####################################################################################
 # Unit tests
