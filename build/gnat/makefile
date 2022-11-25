@@ -25,16 +25,13 @@ TESTS_SRCS	=	$(SRC_DIR)/test/clipboard.adb \
 
 GEN_KB		=	gen/src/sdl-events-keyboards.ads
 
-#ifeq (,$(filter $(SDL_PLATFORM), "linux" "windows" "bsd" "android"))
-#SDL2_CONFIG	=	-cargs `sdl2-config --cflags` -largs `sdl2-config --libs` -lSDL2_ttf -lSDL2_image
-#else ifeq ($(SDL_PLATFORM),macosx)
-
-# Mac
-# SDL2_CONFIG	= -largs -framework SDL2 -framework SDL2_image -framework SDL2_ttf
-#endif
-
-# Mac_Homebrew
-SDL2_CONFIG	= -
+ifeq ($(SDL_PLATFORM),macosx)
+SDL2_CONFIG	=	-largs -framework SDL2 -framework SDL2_image -framework SDL2_ttf
+else ifeq (,$(filter $(SDL_PLATFORM), "linux" "windows" "bsd" "android"))
+SDL2_CONFIG	=	-cargs `sdl2-config --cflags` -largs `sdl2-config --libs` -lSDL2_ttf -lSDL2_image
+else
+SDL2_CONFIG	=
+endif
 
 # With GNAT, all static libs end with .a
 LIB_NAME	=	lib/libadasdl.a
