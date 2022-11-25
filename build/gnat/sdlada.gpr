@@ -1,5 +1,5 @@
 library project SDLAda is
-   type Platform_Type is ("linux", "bsd", "windows", "macosx", "macos_homebrew", "ios", "android");
+   type Platform_Type is ("linux", "bsd", "windows", "darwin", "macos_homebrew", "ios", "android");
    type Mode_Type is ("debug", "release");
 
    Platform : Platform_Type := external ("SDL_PLATFORM", "linux");
@@ -9,7 +9,7 @@ library project SDLAda is
 
    case Platform is
       when "macos_homebrew" =>
-         Source_Platform := "../../src/macosx";
+         Source_Platform := "../../src/darwin";
 
       when others =>
          Source_Platform := "../../src/" & Platform;

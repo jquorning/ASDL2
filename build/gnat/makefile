@@ -25,7 +25,7 @@ TESTS_SRCS	=	$(SRC_DIR)/test/clipboard.adb \
 
 GEN_KB		=	gen/src/sdl-events-keyboards.ads
 
-ifeq ($(SDL_PLATFORM),macosx)
+ifeq ($(SDL_PLATFORM),darwin)
 SDL2_CONFIG	=	-largs -framework SDL2 -framework SDL2_image -framework SDL2_ttf
 else ifeq (,$(filter $(SDL_PLATFORM), "linux" "windows" "bsd" "android"))
 SDL2_CONFIG	=	-cargs `sdl2-config --cflags` -largs `sdl2-config --libs` -lSDL2_ttf -lSDL2_image
