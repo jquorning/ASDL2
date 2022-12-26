@@ -54,6 +54,7 @@ package body SDL.Video.GL is
       Attribute_Context_Profile,
       Attribute_Share_With_Current_Context) with
      Convention => C;
+   pragma Unreferenced (Attribute_Retained_Backing);
 
    function To_int is new Ada.Unchecked_Conversion (Source => Profiles, Target => C.int);
 
